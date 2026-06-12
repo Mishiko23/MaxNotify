@@ -1,0 +1,89 @@
+<h1>MaxNotify для miniShop2</h1>
+
+<p><strong>MaxNotify</strong> — компонент для MODX Revolution 2, который отправляет информацию о заказах miniShop2 в мессенджер MAX через сервис <a href="https://rumaxbot.ru" target="_blank" rel="noopener noreferrer">rumaxbot.ru</a>.</p>
+
+<p>Компонент помогает владельцу и менеджерам интернет-магазина быстро узнавать о новых заказах и изменениях их статуса без постоянной проверки панели MODX.</p>
+
+<h2>Автор</h2>
+
+<ul>
+    <li>Разработчик: <strong>Mishiko23</strong></li>
+    <li>Email: <a href="mailto:bigo2008@gmail.com">bigo2008@gmail.com</a></li>
+</ul>
+
+<h2>Возможности</h2>
+
+<ul>
+    <li>уведомление сразу после создания заказа miniShop2;</li>
+    <li>уведомление при изменении статуса заказа;</li>
+    <li>фильтрация уведомлений по ID статусов;</li>
+    <li>номер, сумма и состав заказа;</li>
+    <li>имя, телефон и email покупателя;</li>
+    <li>адрес доставки и комментарий клиента;</li>
+    <li>название способа доставки и оплаты;</li>
+    <li>ссылка на конкретный заказ в панели MODX;</li>
+    <li>сообщения в формате Markdown или HTML;</li>
+    <li>редактируемые чанки сообщений;</li>
+    <li>запись ошибок API и соединения в журнал MODX.</li>
+</ul>
+
+<h2>Требования</h2>
+
+<ul>
+    <li>MODX Revolution 2.8+;</li>
+    <li>miniShop2 2.x или 4.x;</li>
+    <li>PHP 7.2+;</li>
+    <li>PHP cURL или включённый параметр <code>allow_url_fopen</code>;</li>
+    <li>канал и API-ключ сервиса rumaxbot.ru.</li>
+</ul>
+
+<p>Компонент проверен с MODX Revolution 2.8.8-pl и miniShop2 4.4.2-pl.</p>
+
+<h2>Установка</h2>
+
+<ol>
+    <li>Откройте в MODX раздел <strong>Пакеты → Установщик</strong>.</li>
+    <li>Найдите компонент <strong>MaxNotify</strong> в репозитории <a href="https://modstore.pro" target="_blank" rel="noopener noreferrer">modstore.pro</a>.</li>
+    <li>Нажмите <strong>Скачать</strong>, затем <strong>Установить</strong>.</li>
+    <li>После установки очистите кэш MODX.</li>
+</ol>
+
+<h2>Настройка</h2>
+
+<p>Откройте <strong>Системные настройки</strong> и выберите пространство имён <code>maxnotify</code>.</p>
+
+<ul>
+    <li><code>maxnotify.enabled</code> — включает или отключает компонент;</li>
+    <li><code>maxnotify.api_key</code> — API-ключ канала rumaxbot.ru;</li>
+    <li><code>maxnotify.api_url</code> — адрес API отправки сообщений;</li>
+    <li><code>maxnotify.notify_new_order</code> — уведомления о новых заказах;</li>
+    <li><code>maxnotify.notify_status_change</code> — уведомления о смене статуса;</li>
+    <li><code>maxnotify.statuses</code> — ID статусов через запятую, пустое поле разрешает все статусы;</li>
+    <li><code>maxnotify.format</code> — формат сообщений: <code>markdown</code> или <code>html</code>;</li>
+    <li><code>maxnotify.timeout</code> — таймаут API-запроса в секундах.</li>
+</ul>
+
+<h2>Подключение rumaxbot.ru</h2>
+
+<ol>
+    <li>Зарегистрируйтесь на <a href="https://rumaxbot.ru" target="_blank" rel="noopener noreferrer">rumaxbot.ru</a> и подтвердите email.</li>
+    <li>Создайте канал.</li>
+    <li>Подключите MAX-бота к каналу по инструкции сервиса.</li>
+    <li>Создайте API-ключ канала.</li>
+    <li>Укажите полученный ключ в настройке <code>maxnotify.api_key</code>.</li>
+</ol>
+
+<p><strong>Важно:</strong> API-ключ нельзя публиковать или добавлять в открытый репозиторий.</p>
+
+<h2>Шаблоны сообщений</h2>
+
+<p>После установки в категории элементов <strong>MaxNotify</strong> будут созданы чанки:</p>
+
+<ul>
+    <li><code>maxNotifyOrderCreated</code> — новый заказ в формате Markdown;</li>
+    <li><code>maxNotifyOrderStatus</code> — новый статус в формате Markdown;</li>
+    <li><code>maxNotifyOrderCreatedHtml</code> — новый заказ в формате HTML;</li>
+    <li><code>maxNotifyOrderStatusHtml</code> — новый статус в формате HTML.</li>
+</ul>
+
+<p>Доступные плейсхолдеры: <code>num</code>, <code>cost</code>, <code>receiver</code>, <code>phone</code>, <code>email</code>, <code>address</code>, <code>comment</code>, <code>order_comment</code>, <code>products</code>, <code>delivery_name</code>, <code>payment_name</code>, <code>status_name</code>, <code>manager_url</code> и другие поля заказа.</p>

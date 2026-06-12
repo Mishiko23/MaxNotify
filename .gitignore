@@ -1,0 +1,22 @@
+# Local development tools
+/.tools/
+
+# Uploaded MODX installation
+/assets/
+/connectors/
+/manager/
+/config.core.php
+/ht.access
+/index.php
+/Max modx minishop.zip
+
+# Keep only the MaxNotify component sources from MODX core
+/core/*
+!/core/components/
+/core/components/*
+!/core/components/maxnotify/
+
+# Generated and previous packages
+/_build/packages/
+/core/packages/
+/maxnotify-1.0.0-pl.transport.zip
