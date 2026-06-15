@@ -1,6 +1,6 @@
 <h1>MaxNotify для miniShop2</h1>
 
-<p><strong>MaxNotify</strong> — компонент для MODX Revolution 2, который отправляет информацию о заказах miniShop2 в мессенджер MAX через сервис <a href="https://rumaxbot.ru" target="_blank" rel="noopener noreferrer">rumaxbot.ru</a>.</p>
+<p><strong>MaxNotify</strong> — компонент для MODX Revolution 2, который отправляет информацию о заказах miniShop2 в мессенджер MAX через официальный <a href="https://dev.max.ru/docs/maxbusiness/connection" target="_blank" rel="noopener noreferrer">MAX Business API</a> или сервис <a href="https://rumaxbot.ru" target="_blank" rel="noopener noreferrer">rumaxbot.ru</a>.</p>
 
 <p>Компонент помогает владельцу и менеджерам интернет-магазина быстро узнавать о новых заказах и изменениях их статуса без постоянной проверки панели MODX.</p>
 
@@ -22,6 +22,8 @@
     <li>адрес доставки и комментарий клиента;</li>
     <li>название способа доставки и оплаты;</li>
     <li>ссылка на конкретный заказ в панели MODX;</li>
+    <li>официальный MAX Business API и сервис rumaxbot.ru на выбор;</li>
+    <li>отправка одному или нескольким чатам, каналам или пользователям;</li>
     <li>сообщения в формате Markdown или HTML;</li>
     <li>редактируемые чанки сообщений;</li>
     <li>запись ошибок API и соединения в журнал MODX.</li>
@@ -34,7 +36,7 @@
     <li>miniShop2 2.x или 4.x;</li>
     <li>PHP 7.2+;</li>
     <li>PHP cURL или включённый параметр <code>allow_url_fopen</code>;</li>
-    <li>канал и API-ключ сервиса rumaxbot.ru.</li>
+    <li>токен официального MAX-бота или канал и API-ключ rumaxbot.ru.</li>
 </ul>
 
 <p>Компонент проверен с MODX Revolution 2.8.8-pl и miniShop2 4.4.2-pl.</p>
@@ -54,16 +56,45 @@
 
 <ul>
     <li><code>maxnotify.enabled</code> — включает или отключает компонент;</li>
-    <li><code>maxnotify.api_key</code> — API-ключ канала rumaxbot.ru;</li>
-    <li><code>maxnotify.api_url</code> — адрес API отправки сообщений;</li>
+    <li><code>maxnotify.provider</code> — провайдер <code>rumaxbot</code> или <code>maxbusiness</code>;</li>
+    <li><code>maxnotify.format</code> — формат сообщений: <code>markdown</code> или <code>html</code>;</li>
+    <li><code>maxnotify.timeout</code> — таймаут API-запроса в секундах;</li>
     <li><code>maxnotify.notify_new_order</code> — уведомления о новых заказах;</li>
     <li><code>maxnotify.notify_status_change</code> — уведомления о смене статуса;</li>
-    <li><code>maxnotify.statuses</code> — ID статусов через запятую, пустое поле разрешает все статусы;</li>
-    <li><code>maxnotify.format</code> — формат сообщений: <code>markdown</code> или <code>html</code>;</li>
-    <li><code>maxnotify.timeout</code> — таймаут API-запроса в секундах.</li>
+    <li><code>maxnotify.statuses</code> — ID статусов через запятую, пустое поле разрешает все статусы.</li>
 </ul>
 
+<h2>Подключение официального MAX Business API</h2>
+
+<p>Официальное подключение доступно верифицированным организациям и ИП, которые являются резидентами РФ.</p>
+
+<ol>
+    <li>Создайте и верифицируйте профиль на <a href="https://business.max.ru" target="_blank" rel="noopener noreferrer">платформе MAX для партнёров</a>.</li>
+    <li>Создайте чат-бота и дождитесь прохождения модерации.</li>
+    <li>Получите токен в разделе <strong>Чат-боты → Перейти → Расширенные настройки → Настроить</strong>.</li>
+    <li>Добавьте бота в нужный чат или канал либо запустите личный диалог с ботом.</li>
+    <li>Получите <code>chat_id</code> или <code>user_id</code> через Webhook/Long Polling API MAX.</li>
+    <li>Установите <code>maxnotify.provider</code> в значение <code>maxbusiness</code>.</li>
+</ol>
+
+<ul>
+    <li><code>maxnotify.max_token</code> — токен бота;</li>
+    <li><code>maxnotify.max_recipient_type</code> — <code>chat_id</code> или <code>user_id</code>;</li>
+    <li><code>maxnotify.max_recipient_ids</code> — один или несколько ID через запятую;</li>
+    <li><code>maxnotify.max_notify</code> — уведомлять участников чата;</li>
+    <li><code>maxnotify.max_disable_link_preview</code> — отключить превью ссылок.</li>
+</ul>
+
+<p>Официальный API принимает сообщения длиной до 4000 символов. Более длинные уведомления MaxNotify автоматически сокращает.</p>
+
 <h2>Подключение rumaxbot.ru</h2>
+
+<p>Установите <code>maxnotify.provider</code> в значение <code>rumaxbot</code>, затем укажите:</p>
+
+<ul>
+    <li><code>maxnotify.api_key</code> — API-ключ канала rumaxbot.ru;</li>
+    <li><code>maxnotify.api_url</code> — адрес API отправки сообщений;</li>
+</ul>
 
 <ol>
     <li>Зарегистрируйтесь на <a href="https://rumaxbot.ru" target="_blank" rel="noopener noreferrer">rumaxbot.ru</a> и подтвердите email.</li>

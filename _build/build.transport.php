@@ -76,7 +76,7 @@ $pluginCode = preg_replace('/^<\?php\s*/', '', $pluginCode);
 $plugin = $modx->newObject('modPlugin');
 $plugin->fromArray(array(
     'name' => PKG_NAME,
-    'description' => 'Уведомления о заказах miniShop2 в мессенджер MAX через rumaxbot.ru',
+    'description' => 'Уведомления о заказах miniShop2 через MAX Business API или rumaxbot.ru',
     'plugincode' => $pluginCode,
 ), '', true, true);
 
@@ -129,8 +129,15 @@ $builder->putVehicle($vehicle);
 
 $settings = array(
     'enabled' => array('value' => true, 'xtype' => 'combo-boolean', 'area' => 'maxnotify_main'),
+    'provider' => array('value' => 'rumaxbot', 'xtype' => 'textfield', 'area' => 'maxnotify_main'),
     'api_url' => array('value' => 'https://rumaxbot.ru/api/v1/messages', 'xtype' => 'textfield', 'area' => 'maxnotify_api'),
     'api_key' => array('value' => '', 'xtype' => 'textfield', 'area' => 'maxnotify_api'),
+    'max_api_url' => array('value' => 'https://platform-api.max.ru/messages', 'xtype' => 'textfield', 'area' => 'maxnotify_max_business'),
+    'max_token' => array('value' => '', 'xtype' => 'textfield', 'area' => 'maxnotify_max_business'),
+    'max_recipient_type' => array('value' => 'chat_id', 'xtype' => 'textfield', 'area' => 'maxnotify_max_business'),
+    'max_recipient_ids' => array('value' => '', 'xtype' => 'textfield', 'area' => 'maxnotify_max_business'),
+    'max_notify' => array('value' => true, 'xtype' => 'combo-boolean', 'area' => 'maxnotify_max_business'),
+    'max_disable_link_preview' => array('value' => true, 'xtype' => 'combo-boolean', 'area' => 'maxnotify_max_business'),
     'format' => array('value' => 'markdown', 'xtype' => 'textfield', 'area' => 'maxnotify_api'),
     'timeout' => array('value' => 10, 'xtype' => 'numberfield', 'area' => 'maxnotify_api'),
     'notify_new_order' => array('value' => true, 'xtype' => 'combo-boolean', 'area' => 'maxnotify_events'),
@@ -160,7 +167,7 @@ $builder->setPackageAttributes(array(
     'name' => PKG_NAME,
     'author' => 'Mishiko23',
     'email' => 'bigo2008@gmail.com',
-    'description' => 'Уведомления о новых заказах и смене статусов miniShop2 в мессенджер MAX через API rumaxbot.ru.',
+    'description' => 'Уведомления о заказах miniShop2 в MAX через официальный MAX Business API или сервис rumaxbot.ru.',
     'license' => file_get_contents(PKG_ROOT . 'LICENSE'),
     'readme' => file_get_contents(PKG_ROOT . 'README.md'),
     'changelog' => file_get_contents(PKG_ROOT . 'CHANGELOG.md'),

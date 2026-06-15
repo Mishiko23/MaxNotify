@@ -2,7 +2,7 @@
 
 class MaxNotify
 {
-    const VERSION = '1.0.1';
+    const VERSION = '1.1.0';
 
     /** @var modX */
     public $modx;
@@ -22,12 +22,39 @@ class MaxNotify
 
         $this->config = array_merge(array(
             'corePath' => $corePath,
+            'provider' => strtolower((string) $this->modx->getOption(
+                'maxnotify.provider',
+                null,
+                'rumaxbot'
+            )),
             'apiUrl' => $this->modx->getOption(
                 'maxnotify.api_url',
                 null,
                 'https://rumaxbot.ru/api/v1/messages'
             ),
             'apiKey' => trim((string) $this->modx->getOption('maxnotify.api_key', null, '')),
+            'maxApiUrl' => $this->modx->getOption(
+                'maxnotify.max_api_url',
+                null,
+                'https://platform-api.max.ru/messages'
+            ),
+            'maxToken' => trim((string) $this->modx->getOption('maxnotify.max_token', null, '')),
+            'maxRecipientType' => strtolower((string) $this->modx->getOption(
+                'maxnotify.max_recipient_type',
+                null,
+                'chat_id'
+            )),
+            'maxRecipientIds' => trim((string) $this->modx->getOption(
+                'maxnotify.max_recipient_ids',
+                null,
+                ''
+            )),
+            'maxNotify' => (bool) $this->modx->getOption('maxnotify.max_notify', null, true),
+            'maxDisableLinkPreview' => (bool) $this->modx->getOption(
+                'maxnotify.max_disable_link_preview',
+                null,
+                true
+            ),
             'format' => strtolower((string) $this->modx->getOption('maxnotify.format', null, 'markdown')),
             'timeout' => max(1, (int) $this->modx->getOption('maxnotify.timeout', null, 10)),
         ), $config);
@@ -259,46 +286,150 @@ class MaxNotify
      */
     public function send($message)
     {
+        $format = in_array($this->config['format'], array('markdown', 'html'), true)
+            ? $this->config['format']
+            : 'markdown';
+
+        if (in_array($this->config['provider'], array('maxbusiness', 'max', 'official'), true)) {
+            return $this->sendMaxBusiness((string) $message, $format);
+        }
+
+        return $this->sendRumaxbot((string) $message, $format);
+    }
+
+    /**
+     * @param string $message
+     * @param string $format
+     * @return bool
+     */
+    protected function sendRumaxbot($message, $format)
+    {
         if ($this->config['apiKey'] === '') {
             $this->log(modX::LOG_LEVEL_ERROR, 'System setting maxnotify.api_key is empty.');
             return false;
         }
 
-        $format = in_array($this->config['format'], array('markdown', 'html'), true)
-            ? $this->config['format']
-            : 'markdown';
-
-        $payload = json_encode(array(
+        $payload = $this->encodePayload(array(
             'text' => (string) $message,
             'format' => $format,
-        ), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        ));
+
+        if ($payload === false) {
+            return false;
+        }
+
+        return $this->sendRequest(
+            $this->config['apiUrl'],
+            $payload,
+            'Bearer ' . $this->config['apiKey'],
+            'rumaxbot.ru'
+        );
+    }
+
+    /**
+     * @param string $message
+     * @param string $format
+     * @return bool
+     */
+    protected function sendMaxBusiness($message, $format)
+    {
+        if ($this->config['maxToken'] === '') {
+            $this->log(modX::LOG_LEVEL_ERROR, 'System setting maxnotify.max_token is empty.');
+            return false;
+        }
+
+        $recipientType = in_array($this->config['maxRecipientType'], array('chat_id', 'user_id'), true)
+            ? $this->config['maxRecipientType']
+            : 'chat_id';
+        $recipientIds = preg_split('/[\s,;]+/', $this->config['maxRecipientIds'], -1, PREG_SPLIT_NO_EMPTY);
+        $recipientIds = array_values(array_filter($recipientIds, function ($id) {
+            return preg_match('/^-?\d+$/', $id);
+        }));
+
+        if (!$recipientIds) {
+            $this->log(
+                modX::LOG_LEVEL_ERROR,
+                'System setting maxnotify.max_recipient_ids does not contain a valid recipient ID.'
+            );
+            return false;
+        }
+
+        $payload = $this->encodePayload(array(
+            'text' => $this->limitText($message, 4000),
+            'format' => $format,
+            'notify' => $this->config['maxNotify'],
+        ));
+
+        if ($payload === false) {
+            return false;
+        }
+
+        $success = true;
+        foreach ($recipientIds as $recipientId) {
+            $query = array(
+                $recipientType => $recipientId,
+                'disable_link_preview' => $this->config['maxDisableLinkPreview'] ? 'true' : 'false',
+            );
+            $separator = strpos($this->config['maxApiUrl'], '?') === false ? '?' : '&';
+            $url = $this->config['maxApiUrl'] . $separator . http_build_query($query);
+
+            if (!$this->sendRequest($url, $payload, $this->config['maxToken'], 'MAX Business')) {
+                $success = false;
+            }
+        }
+
+        return $success;
+    }
+
+    /**
+     * @param array $data
+     * @return string|false
+     */
+    protected function encodePayload(array $data)
+    {
+        $payload = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
         if ($payload === false) {
             $this->log(modX::LOG_LEVEL_ERROR, 'Could not encode the API request as JSON.');
             return false;
         }
 
-        if (function_exists('curl_init')) {
-            return $this->sendWithCurl($payload);
-        }
-
-        return $this->sendWithStreams($payload);
+        return $payload;
     }
 
     /**
+     * @param string $url
      * @param string $payload
+     * @param string $authorization
+     * @param string $service
      * @return bool
      */
-    protected function sendWithCurl($payload)
+    protected function sendRequest($url, $payload, $authorization, $service)
     {
-        $handle = curl_init($this->config['apiUrl']);
+        if (function_exists('curl_init')) {
+            return $this->sendWithCurl($url, $payload, $authorization, $service);
+        }
+
+        return $this->sendWithStreams($url, $payload, $authorization, $service);
+    }
+
+    /**
+     * @param string $url
+     * @param string $payload
+     * @param string $authorization
+     * @param string $service
+     * @return bool
+     */
+    protected function sendWithCurl($url, $payload, $authorization, $service)
+    {
+        $handle = curl_init($url);
         curl_setopt_array($handle, array(
             CURLOPT_POST => true,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_CONNECTTIMEOUT => $this->config['timeout'],
             CURLOPT_TIMEOUT => $this->config['timeout'],
             CURLOPT_HTTPHEADER => array(
-                'Authorization: Bearer ' . $this->config['apiKey'],
+                'Authorization: ' . $authorization,
                 'Content-Type: application/json',
                 'Accept: application/json',
                 'User-Agent: MaxNotify/' . self::VERSION,
@@ -312,18 +443,21 @@ class MaxNotify
         curl_close($handle);
 
         if ($response === false) {
-            $this->log(modX::LOG_LEVEL_ERROR, 'rumaxbot.ru transport error: ' . $error);
+            $this->log(modX::LOG_LEVEL_ERROR, $service . ' transport error: ' . $error);
             return false;
         }
 
-        return $this->validateResponse($status, $response);
+        return $this->validateResponse($status, $response, $service);
     }
 
     /**
+     * @param string $url
      * @param string $payload
+     * @param string $authorization
+     * @param string $service
      * @return bool
      */
-    protected function sendWithStreams($payload)
+    protected function sendWithStreams($url, $payload, $authorization, $service)
     {
         $context = stream_context_create(array(
             'http' => array(
@@ -331,7 +465,7 @@ class MaxNotify
                 'timeout' => $this->config['timeout'],
                 'ignore_errors' => true,
                 'header' => implode("\r\n", array(
-                    'Authorization: Bearer ' . $this->config['apiKey'],
+                    'Authorization: ' . $authorization,
                     'Content-Type: application/json',
                     'Accept: application/json',
                     'User-Agent: MaxNotify/' . self::VERSION,
@@ -340,19 +474,19 @@ class MaxNotify
             ),
         ));
 
-        $response = @file_get_contents($this->config['apiUrl'], false, $context);
+        $response = @file_get_contents($url, false, $context);
         $headers = isset($http_response_header) ? $http_response_header : array();
         $status = $this->getStatusFromHeaders($headers);
 
         if ($response === false && $status === 0) {
             $this->log(
                 modX::LOG_LEVEL_ERROR,
-                'rumaxbot.ru transport error. Enable cURL or allow_url_fopen and verify outbound HTTPS access.'
+                $service . ' transport error. Enable cURL or allow_url_fopen and verify outbound HTTPS access.'
             );
             return false;
         }
 
-        return $this->validateResponse($status, (string) $response);
+        return $this->validateResponse($status, (string) $response, $service);
     }
 
     /**
@@ -374,9 +508,10 @@ class MaxNotify
     /**
      * @param int $status
      * @param string $response
+     * @param string $service
      * @return bool
      */
-    protected function validateResponse($status, $response)
+    protected function validateResponse($status, $response, $service)
     {
         if ($status >= 200 && $status < 300) {
             return true;
@@ -389,10 +524,31 @@ class MaxNotify
 
         $this->log(
             modX::LOG_LEVEL_ERROR,
-            'rumaxbot.ru returned HTTP ' . $status . ($body !== '' ? ': ' . $body : '')
+            $service . ' returned HTTP ' . $status . ($body !== '' ? ': ' . $body : '')
         );
 
         return false;
+    }
+
+    /**
+     * @param string $text
+     * @param int $limit
+     * @return string
+     */
+    protected function limitText($text, $limit)
+    {
+        $length = function_exists('mb_strlen') ? mb_strlen($text, 'UTF-8') : strlen($text);
+        if ($length <= $limit) {
+            return $text;
+        }
+
+        $suffix = "\n...";
+        $sliceLength = $limit - strlen($suffix);
+        $text = function_exists('mb_substr')
+            ? mb_substr($text, 0, $sliceLength, 'UTF-8')
+            : substr($text, 0, $sliceLength);
+
+        return rtrim($text) . $suffix;
     }
 
     /**
