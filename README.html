@@ -79,6 +79,7 @@
 
 <ul>
     <li><code>maxnotify.max_token</code> — токен бота;</li>
+    <li><code>maxnotify.max_ca_cert_path</code> — необязательный путь к PEM-файлу или CA bundle с сертификатом Минцифры;</li>
     <li><code>maxnotify.max_recipient_type</code> — <code>chat_id</code> или <code>user_id</code>;</li>
     <li><code>maxnotify.max_recipient_ids</code> — один или несколько ID через запятую;</li>
     <li><code>maxnotify.max_notify</code> — уведомлять участников чата;</li>
@@ -86,6 +87,8 @@
 </ul>
 
 <p>Официальный API принимает сообщения длиной до 4000 символов. Более длинные уведомления MaxNotify автоматически сокращает.</p>
+
+<p>С 19 июля 2026 MAX требует отправлять запросы на домен <code>platform-api2.max.ru</code> вместо <code>platform-api.max.ru</code> и добавить сертификат Минцифры в список доверенных. В MaxNotify новый домен используется по умолчанию. Если на сервере PHP/cURL не доверяет сертификату системно, укажите путь к PEM-файлу или CA bundle в настройке <code>maxnotify.max_ca_cert_path</code>.</p>
 
 <h2>Подключение rumaxbot.ru</h2>
 

@@ -125,6 +125,9 @@ $vehicle->resolve('file', array(
     'source' => PKG_CORE,
     'target' => "return MODX_CORE_PATH . 'components/';",
 ));
+$vehicle->resolve('php', array(
+    'source' => PKG_ROOT . '_build/resolvers/resolve.maxbusiness.php',
+));
 $builder->putVehicle($vehicle);
 
 $settings = array(
@@ -132,8 +135,9 @@ $settings = array(
     'provider' => array('value' => 'rumaxbot', 'xtype' => 'textfield', 'area' => 'maxnotify_main'),
     'api_url' => array('value' => 'https://rumaxbot.ru/api/v1/messages', 'xtype' => 'textfield', 'area' => 'maxnotify_api'),
     'api_key' => array('value' => '', 'xtype' => 'textfield', 'area' => 'maxnotify_api'),
-    'max_api_url' => array('value' => 'https://platform-api.max.ru/messages', 'xtype' => 'textfield', 'area' => 'maxnotify_max_business'),
+    'max_api_url' => array('value' => 'https://platform-api2.max.ru/messages', 'xtype' => 'textfield', 'area' => 'maxnotify_max_business'),
     'max_token' => array('value' => '', 'xtype' => 'textfield', 'area' => 'maxnotify_max_business'),
+    'max_ca_cert_path' => array('value' => '', 'xtype' => 'textfield', 'area' => 'maxnotify_max_business'),
     'max_recipient_type' => array('value' => 'chat_id', 'xtype' => 'textfield', 'area' => 'maxnotify_max_business'),
     'max_recipient_ids' => array('value' => '', 'xtype' => 'textfield', 'area' => 'maxnotify_max_business'),
     'max_notify' => array('value' => true, 'xtype' => 'combo-boolean', 'area' => 'maxnotify_max_business'),

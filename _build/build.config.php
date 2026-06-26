@@ -2,7 +2,7 @@
 
 define('PKG_NAME', 'MaxNotify');
 define('PKG_NAME_LOWER', 'maxnotify');
-define('PKG_VERSION', '1.1.0');
+define('PKG_VERSION', '1.1.1');
 define('PKG_RELEASE', 'pl');
 define('PKG_ROOT', dirname(__DIR__) . '/');
 define('PKG_CORE', PKG_ROOT . 'core/components/' . PKG_NAME_LOWER . '/');

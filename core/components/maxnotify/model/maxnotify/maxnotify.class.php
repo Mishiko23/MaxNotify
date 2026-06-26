@@ -2,7 +2,7 @@
 
 class MaxNotify
 {
-    const VERSION = '1.1.0';
+    const VERSION = '1.1.1';
 
     /** @var modX */
     public $modx;
@@ -36,9 +36,14 @@ class MaxNotify
             'maxApiUrl' => $this->modx->getOption(
                 'maxnotify.max_api_url',
                 null,
-                'https://platform-api.max.ru/messages'
+                'https://platform-api2.max.ru/messages'
             ),
             'maxToken' => trim((string) $this->modx->getOption('maxnotify.max_token', null, '')),
+            'maxCaCertPath' => trim((string) $this->modx->getOption(
+                'maxnotify.max_ca_cert_path',
+                null,
+                ''
+            )),
             'maxRecipientType' => strtolower((string) $this->modx->getOption(
                 'maxnotify.max_recipient_type',
                 null,
@@ -337,6 +342,13 @@ class MaxNotify
             $this->log(modX::LOG_LEVEL_ERROR, 'System setting maxnotify.max_token is empty.');
             return false;
         }
+        if ($this->config['maxCaCertPath'] !== '' && !is_file($this->config['maxCaCertPath'])) {
+            $this->log(
+                modX::LOG_LEVEL_ERROR,
+                'System setting maxnotify.max_ca_cert_path points to a missing certificate file.'
+            );
+            return false;
+        }
 
         $recipientType = in_array($this->config['maxRecipientType'], array('chat_id', 'user_id'), true)
             ? $this->config['maxRecipientType']
@@ -373,7 +385,13 @@ class MaxNotify
             $separator = strpos($this->config['maxApiUrl'], '?') === false ? '?' : '&';
             $url = $this->config['maxApiUrl'] . $separator . http_build_query($query);
 
-            if (!$this->sendRequest($url, $payload, $this->config['maxToken'], 'MAX Business')) {
+            if (!$this->sendRequest(
+                $url,
+                $payload,
+                $this->config['maxToken'],
+                'MAX Business',
+                $this->config['maxCaCertPath']
+            )) {
                 $success = false;
             }
         }
@@ -402,15 +420,16 @@ class MaxNotify
      * @param string $payload
      * @param string $authorization
      * @param string $service
+     * @param string $caCertPath
      * @return bool
      */
-    protected function sendRequest($url, $payload, $authorization, $service)
+    protected function sendRequest($url, $payload, $authorization, $service, $caCertPath = '')
     {
         if (function_exists('curl_init')) {
-            return $this->sendWithCurl($url, $payload, $authorization, $service);
+            return $this->sendWithCurl($url, $payload, $authorization, $service, $caCertPath);
         }
 
-        return $this->sendWithStreams($url, $payload, $authorization, $service);
+        return $this->sendWithStreams($url, $payload, $authorization, $service, $caCertPath);
     }
 
     /**
@@ -418,12 +437,13 @@ class MaxNotify
      * @param string $payload
      * @param string $authorization
      * @param string $service
+     * @param string $caCertPath
      * @return bool
      */
-    protected function sendWithCurl($url, $payload, $authorization, $service)
+    protected function sendWithCurl($url, $payload, $authorization, $service, $caCertPath = '')
     {
         $handle = curl_init($url);
-        curl_setopt_array($handle, array(
+        $options = array(
             CURLOPT_POST => true,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_CONNECTTIMEOUT => $this->config['timeout'],
@@ -435,7 +455,11 @@ class MaxNotify
                 'User-Agent: MaxNotify/' . self::VERSION,
             ),
             CURLOPT_POSTFIELDS => $payload,
-        ));
+        );
+        if ($caCertPath !== '') {
+            $options[CURLOPT_CAINFO] = $caCertPath;
+        }
+        curl_setopt_array($handle, $options);
 
         $response = curl_exec($handle);
         $error = curl_error($handle);
@@ -455,11 +479,12 @@ class MaxNotify
      * @param string $payload
      * @param string $authorization
      * @param string $service
+     * @param string $caCertPath
      * @return bool
      */
-    protected function sendWithStreams($url, $payload, $authorization, $service)
+    protected function sendWithStreams($url, $payload, $authorization, $service, $caCertPath = '')
     {
-        $context = stream_context_create(array(
+        $contextOptions = array(
             'http' => array(
                 'method' => 'POST',
                 'timeout' => $this->config['timeout'],
@@ -472,7 +497,15 @@ class MaxNotify
                 )),
                 'content' => $payload,
             ),
-        ));
+        );
+        if ($caCertPath !== '') {
+            $contextOptions['ssl'] = array(
+                'cafile' => $caCertPath,
+                'verify_peer' => true,
+                'verify_peer_name' => true,
+            );
+        }
+        $context = stream_context_create($contextOptions);
 
         $response = @file_get_contents($url, false, $context);
         $headers = isset($http_response_header) ? $http_response_header : array();
