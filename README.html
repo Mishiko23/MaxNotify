@@ -68,7 +68,8 @@
     <li><code>maxnotify.notify_new_order</code> — уведомления о новых заказах;</li>
     <li><code>maxnotify.notify_status_change</code> — уведомления о смене статуса;</li>
     <li><code>maxnotify.statuses</code> — ID статусов через запятую, пустое поле разрешает все статусы;</li>
-    <li><code>maxnotify.form_exclude_fields</code> — технические поля форм, которые не нужно отправлять.</li>
+    <li><code>maxnotify.form_exclude_fields</code> — технические поля форм, которые не нужно отправлять;</li>
+    <li><code>maxnotify.form_field_labels</code> — русские названия полей форм в формате <code>field=Название</code>.</li>
 </ul>
 
 <h2>Подключение FormIt</h2>
@@ -88,6 +89,24 @@
 <p>Добавьте hook-сниппет <code>maxNotifySendIt</code> в цепочку успешной обработки SendIt, если в вашей конфигурации SendIt используются hook-сниппеты. Сниппет также умеет брать данные из <code>$_POST</code>, поэтому его можно вызывать после успешной валидации формы.</p>
 
 <p>Отключить отправку заявок SendIt можно настройкой <code>maxnotify.enable_sendit</code>. Заголовок сообщения меняется настройкой <code>maxnotify.sendit_title</code>.</p>
+
+<h2>Названия полей форм</h2>
+
+<p>По умолчанию MaxNotify показывает частые поля по-русски:</p>
+
+<ul>
+    <li><code>name</code> → <code>Имя</code>;</li>
+    <li><code>phone</code> → <code>Телефон</code>;</li>
+    <li><code>email</code> → <code>Email</code>;</li>
+    <li><code>message</code> → <code>Сообщение</code>;</li>
+    <li><code>comment</code> → <code>Комментарий</code>.</li>
+</ul>
+
+<p>Свои названия можно задать в настройке <code>maxnotify.form_field_labels</code>, например:</p>
+
+<pre><code>name=Имя,phone=Телефон,email=Email,service=Услуга</code></pre>
+
+<p>Служебные поля вроде <code>agree</code>, <code>pageId</code>, <code>nospam</code> и <code>nospam:blank</code> исключаются настройкой <code>maxnotify.form_exclude_fields</code>.</p>
 
 <h2>Подключение официального MAX Business API</h2>
 

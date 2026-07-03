@@ -106,16 +106,29 @@ $form = new TestMaxNotify($modx, array(
     'apiUrl' => 'https://rumaxbot.ru/api/v1/messages',
     'apiKey' => 'rumax-key',
     'format' => 'markdown',
-    'formExcludeFields' => 'token,nospam',
+    'formExcludeFields' => 'token,nospam,agree,pageId',
+    'formFieldLabels' => 'name=Имя,phone=Телефон',
 ));
 
 assertTrue(
-    $form->notifyForm('FormIt', array('Name' => 'Alex', 'token' => 'secret', 'nospam' => '1'), 'Lead'),
+    $form->notifyForm('FormIt', array(
+        'name' => 'тестовое',
+        'phone' => '333333333333333',
+        'agree' => '1',
+        'nospam:blank' => '',
+        'pageId' => '7112',
+        'token' => 'secret',
+    ), 'Lead'),
     'Form notification should be sent.'
 );
 $formPayload = json_decode($form->requests[0]['payload'], true);
 assertTrue(strpos($formPayload['text'], 'FormIt') !== false, 'Form source should be rendered.');
-assertTrue(strpos($formPayload['text'], 'Alex') !== false, 'Form fields should be rendered.');
+assertTrue(strpos($formPayload['text'], 'Имя') !== false, 'Russian form labels should be rendered.');
+assertTrue(strpos($formPayload['text'], 'Телефон') !== false, 'Russian phone label should be rendered.');
+assertTrue(strpos($formPayload['text'], 'тестовое') !== false, 'Form fields should be rendered.');
 assertTrue(strpos($formPayload['text'], 'secret') === false, 'Excluded form fields must not be sent.');
+assertTrue(strpos($formPayload['text'], 'agree') === false, 'Agreement field must not be sent.');
+assertTrue(strpos($formPayload['text'], 'nospam') === false, 'Composite nospam field must not be sent.');
+assertTrue(strpos($formPayload['text'], 'pageId') === false, 'Page ID field must not be sent.');
 
 echo "MaxNotify service tests passed.\n";

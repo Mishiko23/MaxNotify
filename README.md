@@ -68,7 +68,8 @@
 - `maxnotify.notify_new_order` — уведомления о новых заказах;
 - `maxnotify.notify_status_change` — уведомления о смене статуса;
 - `maxnotify.statuses` — ID статусов через запятую, пустое поле разрешает все;
-- `maxnotify.form_exclude_fields` — технические поля форм, которые не нужно отправлять.
+- `maxnotify.form_exclude_fields` — технические поля форм, которые не нужно отправлять;
+- `maxnotify.form_field_labels` — русские названия полей форм в формате `field=Название`.
 
 ## Подключение FormIt
 
@@ -97,6 +98,25 @@
 
 Отключить отправку заявок SendIt можно настройкой `maxnotify.enable_sendit`.
 Заголовок сообщения меняется настройкой `maxnotify.sendit_title`.
+
+## Названия полей форм
+
+По умолчанию MaxNotify показывает частые поля по-русски:
+
+- `name` → `Имя`;
+- `phone` → `Телефон`;
+- `email` → `Email`;
+- `message` → `Сообщение`;
+- `comment` → `Комментарий`.
+
+Свои названия можно задать в настройке `maxnotify.form_field_labels`, например:
+
+```text
+name=Имя,phone=Телефон,email=Email,service=Услуга
+```
+
+Служебные поля вроде `agree`, `pageId`, `nospam` и `nospam:blank`
+исключаются настройкой `maxnotify.form_exclude_fields`.
 
 ## Подключение официального MAX Business API
 

@@ -2,7 +2,7 @@
 
 class MaxNotify
 {
-    const VERSION = '1.2.0';
+    const VERSION = '1.2.1';
 
     /** @var modX */
     public $modx;
@@ -65,7 +65,12 @@ class MaxNotify
             'formExcludeFields' => (string) $this->modx->getOption(
                 'maxnotify.form_exclude_fields',
                 null,
-                'nospam,blank,submit,action,form_key'
+                'agree,policy,privacy,consent,nospam,blank,submit,action,form_key,pageId,page_id'
+            ),
+            'formFieldLabels' => (string) $this->modx->getOption(
+                'maxnotify.form_field_labels',
+                null,
+                'name=Имя,phone=Телефон,email=Email,message=Сообщение,comment=Комментарий,company=Компания,subject=Тема'
             ),
         ), $config);
     }
@@ -250,11 +255,10 @@ class MaxNotify
      */
     protected function filterFormFields(array $fields)
     {
-        $exclude = array_filter(array_map('trim', explode(',', $this->config['formExcludeFields'])), 'strlen');
-        $exclude = array_map('strtolower', $exclude);
+        $exclude = $this->getListOption($this->config['formExcludeFields']);
 
         foreach ($fields as $key => $value) {
-            if (in_array(strtolower((string) $key), $exclude, true)) {
+            if ($this->isFormFieldExcluded($key, $exclude)) {
                 unset($fields[$key]);
             }
         }
@@ -269,10 +273,17 @@ class MaxNotify
     protected function getFieldsText(array $fields)
     {
         $lines = array();
+        $labels = $this->getFieldLabels();
         foreach ($fields as $key => $value) {
-            $line = $this->escape($key) . ': ' . $this->escape($this->normalizeFormValue($value));
+            $label = $this->getFormFieldLabel($key, $labels);
+            $value = $this->normalizeFormValue($value);
+            if ($value === '') {
+                continue;
+            }
+
+            $line = $this->escape($label) . ': ' . $this->escape($value);
             $lines[] = $this->config['format'] === 'html'
-                ? '<li><b>' . $this->escape($key) . ':</b> ' . $this->escape($this->normalizeFormValue($value)) . '</li>'
+                ? '<li><b>' . $this->escape($label) . ':</b> ' . $this->escape($value) . '</li>'
                 : '- ' . $line;
         }
 
@@ -281,6 +292,79 @@ class MaxNotify
         }
 
         return implode("\n", $lines);
+    }
+
+    /**
+     * @param string $value
+     * @return array
+     */
+    protected function getListOption($value)
+    {
+        $items = array_filter(array_map('trim', explode(',', (string) $value)), 'strlen');
+        return array_map('strtolower', $items);
+    }
+
+    /**
+     * @param mixed $key
+     * @param array $exclude
+     * @return bool
+     */
+    protected function isFormFieldExcluded($key, array $exclude)
+    {
+        $key = strtolower(trim((string) $key));
+        if ($key === '') {
+            return true;
+        }
+        if (in_array($key, $exclude, true)) {
+            return true;
+        }
+
+        $parts = array_filter(preg_split('/[^a-z0-9_]+/i', $key), 'strlen');
+        foreach ($parts as $part) {
+            if (in_array(strtolower($part), $exclude, true)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @return array
+     */
+    protected function getFieldLabels()
+    {
+        $labels = array();
+        $items = array_filter(array_map('trim', explode(',', $this->config['formFieldLabels'])), 'strlen');
+        foreach ($items as $item) {
+            $parts = explode('=', $item, 2);
+            if (count($parts) !== 2) {
+                continue;
+            }
+            $key = strtolower(trim($parts[0]));
+            $label = trim($parts[1]);
+            if ($key !== '' && $label !== '') {
+                $labels[$key] = $label;
+            }
+        }
+
+        return $labels;
+    }
+
+    /**
+     * @param mixed $key
+     * @param array $labels
+     * @return string
+     */
+    protected function getFormFieldLabel($key, array $labels)
+    {
+        $key = trim((string) $key);
+        $lookup = strtolower($key);
+        if (isset($labels[$lookup])) {
+            return $labels[$lookup];
+        }
+
+        return $key;
     }
 
     /**

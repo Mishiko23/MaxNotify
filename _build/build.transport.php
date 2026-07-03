@@ -182,7 +182,8 @@ $settings = array(
     'form_title' => array('value' => 'Новая заявка с сайта', 'xtype' => 'textfield', 'area' => 'maxnotify_events'),
     'formit_title' => array('value' => 'Новая заявка FormIt', 'xtype' => 'textfield', 'area' => 'maxnotify_events'),
     'sendit_title' => array('value' => 'Новая заявка SendIt', 'xtype' => 'textfield', 'area' => 'maxnotify_events'),
-    'form_exclude_fields' => array('value' => 'nospam,blank,submit,action,form_key', 'xtype' => 'textfield', 'area' => 'maxnotify_events'),
+    'form_exclude_fields' => array('value' => 'agree,policy,privacy,consent,nospam,blank,submit,action,form_key,pageId,page_id', 'xtype' => 'textfield', 'area' => 'maxnotify_events'),
+    'form_field_labels' => array('value' => 'name=Имя,phone=Телефон,email=Email,message=Сообщение,comment=Комментарий,company=Компания,subject=Тема', 'xtype' => 'textfield', 'area' => 'maxnotify_events'),
 );
 
 foreach ($settings as $key => $data) {

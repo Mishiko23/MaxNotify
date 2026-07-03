@@ -52,3 +52,5 @@ $_lang['setting_maxnotify.sendit_title'] = 'SendIt title';
 $_lang['setting_maxnotify.sendit_title_desc'] = 'Title for notifications sent through maxNotifySendIt.';
 $_lang['setting_maxnotify.form_exclude_fields'] = 'Excluded form fields';
 $_lang['setting_maxnotify.form_exclude_fields_desc'] = 'Comma-separated technical field names that should not be sent to MAX.';
+$_lang['setting_maxnotify.form_field_labels'] = 'Form field labels';
+$_lang['setting_maxnotify.form_field_labels_desc'] = 'Comma-separated field=Label pairs. Example: name=Name,phone=Phone,email=Email.';

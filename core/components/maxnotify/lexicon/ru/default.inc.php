@@ -52,3 +52,5 @@ $_lang['setting_maxnotify.sendit_title'] = 'Заголовок SendIt';
 $_lang['setting_maxnotify.sendit_title_desc'] = 'Заголовок уведомлений, отправленных через maxNotifySendIt.';
 $_lang['setting_maxnotify.form_exclude_fields'] = 'Исключаемые поля форм';
 $_lang['setting_maxnotify.form_exclude_fields_desc'] = 'Список технических полей через запятую, которые не нужно отправлять в MAX.';
+$_lang['setting_maxnotify.form_field_labels'] = 'Названия полей форм';
+$_lang['setting_maxnotify.form_field_labels_desc'] = 'Пары field=Название через запятую. Например: name=Имя,phone=Телефон,email=Email.';
