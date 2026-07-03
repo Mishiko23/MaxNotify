@@ -56,6 +56,8 @@ $chunks = array(
     'maxNotifyOrderCreatedHtml' => 'maxnotify.order_created_html.chunk.tpl',
     'maxNotifyOrderStatus' => 'maxnotify.order_status.chunk.tpl',
     'maxNotifyOrderStatusHtml' => 'maxnotify.order_status_html.chunk.tpl',
+    'maxNotifyForm' => 'maxnotify.form.chunk.tpl',
+    'maxNotifyFormHtml' => 'maxnotify.form_html.chunk.tpl',
 );
 
 $chunkObjects = array();
@@ -69,6 +71,28 @@ foreach ($chunks as $name => $file) {
     $chunkObjects[] = $chunk;
 }
 $category->addMany($chunkObjects);
+
+$snippets = array(
+    'maxNotifyFormIt' => 'maxnotify.formit.snippet.php',
+    'maxNotifySendIt' => 'maxnotify.sendit.snippet.php',
+);
+
+function maxNotifyElementCode($file)
+{
+    return preg_replace('/^<\?php\s*/', '', file_get_contents($file));
+}
+
+$snippetObjects = array();
+foreach ($snippets as $name => $file) {
+    $snippet = $modx->newObject('modSnippet');
+    $snippet->fromArray(array(
+        'name' => $name,
+        'description' => 'Hook уведомлений MaxNotify',
+        'snippet' => maxNotifyElementCode(PKG_CORE . 'elements/snippets/' . $file),
+    ), '', true, true);
+    $snippetObjects[] = $snippet;
+}
+$category->addMany($snippetObjects);
 
 $pluginCode = file_get_contents(PKG_CORE . 'elements/plugins/maxnotify.plugin.php');
 $pluginCode = preg_replace('/^<\?php\s*/', '', $pluginCode);
@@ -118,6 +142,11 @@ $vehicle = $builder->createVehicle($category, array(
                 ),
             ),
         ),
+        'Snippets' => array(
+            xPDOTransport::UNIQUE_KEY => 'name',
+            xPDOTransport::PRESERVE_KEYS => false,
+            xPDOTransport::UPDATE_OBJECT => true,
+        ),
     ),
 ));
 
@@ -132,6 +161,9 @@ $builder->putVehicle($vehicle);
 
 $settings = array(
     'enabled' => array('value' => true, 'xtype' => 'combo-boolean', 'area' => 'maxnotify_main'),
+    'enable_minishop2' => array('value' => true, 'xtype' => 'combo-boolean', 'area' => 'maxnotify_events'),
+    'enable_formit' => array('value' => true, 'xtype' => 'combo-boolean', 'area' => 'maxnotify_events'),
+    'enable_sendit' => array('value' => true, 'xtype' => 'combo-boolean', 'area' => 'maxnotify_events'),
     'provider' => array('value' => 'rumaxbot', 'xtype' => 'textfield', 'area' => 'maxnotify_main'),
     'api_url' => array('value' => 'https://rumaxbot.ru/api/v1/messages', 'xtype' => 'textfield', 'area' => 'maxnotify_api'),
     'api_key' => array('value' => '', 'xtype' => 'textfield', 'area' => 'maxnotify_api'),
@@ -147,6 +179,10 @@ $settings = array(
     'notify_new_order' => array('value' => true, 'xtype' => 'combo-boolean', 'area' => 'maxnotify_events'),
     'notify_status_change' => array('value' => false, 'xtype' => 'combo-boolean', 'area' => 'maxnotify_events'),
     'statuses' => array('value' => '', 'xtype' => 'textfield', 'area' => 'maxnotify_events'),
+    'form_title' => array('value' => 'Новая заявка с сайта', 'xtype' => 'textfield', 'area' => 'maxnotify_events'),
+    'formit_title' => array('value' => 'Новая заявка FormIt', 'xtype' => 'textfield', 'area' => 'maxnotify_events'),
+    'sendit_title' => array('value' => 'Новая заявка SendIt', 'xtype' => 'textfield', 'area' => 'maxnotify_events'),
+    'form_exclude_fields' => array('value' => 'nospam,blank,submit,action,form_key', 'xtype' => 'textfield', 'area' => 'maxnotify_events'),
 );
 
 foreach ($settings as $key => $data) {

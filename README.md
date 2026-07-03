@@ -19,6 +19,9 @@
 
 - уведомление сразу после создания заказа miniShop2;
 - уведомление при изменении статуса заказа;
+- уведомления о заявках FormIt;
+- уведомления о заявках SendIt;
+- отдельное отключение источников miniShop2, FormIt и SendIt;
 - фильтрация уведомлений по ID статусов;
 - номер, сумма и состав заказа;
 - имя, телефон и email покупателя;
@@ -56,12 +59,44 @@
 Основные параметры:
 
 - `maxnotify.enabled` — включает или отключает компонент;
+- `maxnotify.enable_minishop2` — уведомления miniShop2;
+- `maxnotify.enable_formit` — уведомления FormIt;
+- `maxnotify.enable_sendit` — уведомления SendIt;
 - `maxnotify.provider` — `rumaxbot` или `maxbusiness`;
 - `maxnotify.format` — формат `markdown` или `html`;
 - `maxnotify.timeout` — таймаут API-запроса в секундах;
 - `maxnotify.notify_new_order` — уведомления о новых заказах;
 - `maxnotify.notify_status_change` — уведомления о смене статуса;
-- `maxnotify.statuses` — ID статусов через запятую, пустое поле разрешает все.
+- `maxnotify.statuses` — ID статусов через запятую, пустое поле разрешает все;
+- `maxnotify.form_exclude_fields` — технические поля форм, которые не нужно отправлять.
+
+## Подключение FormIt
+
+Добавьте hook-сниппет `maxNotifyFormIt` в параметр `&hooks` после успешных
+проверок формы.
+
+Пример:
+
+```html
+[[!FormIt?
+    &hooks=`spam,email,maxNotifyFormIt,redirect`
+    &emailTpl=`tpl.Email`
+    &redirectTo=`12`
+]]
+```
+
+Отключить отправку заявок FormIt можно настройкой `maxnotify.enable_formit`.
+Заголовок сообщения меняется настройкой `maxnotify.formit_title`.
+
+## Подключение SendIt
+
+Добавьте hook-сниппет `maxNotifySendIt` в цепочку успешной обработки SendIt,
+если в вашей конфигурации SendIt используются hook-сниппеты. Сниппет также
+умеет брать данные из `$_POST`, поэтому его можно вызывать после успешной
+валидации формы.
+
+Отключить отправку заявок SendIt можно настройкой `maxnotify.enable_sendit`.
+Заголовок сообщения меняется настройкой `maxnotify.sendit_title`.
 
 ## Подключение официального MAX Business API
 
@@ -117,8 +152,11 @@ API-ключ нельзя публиковать или добавлять в р
 - `maxNotifyOrderCreated` — новый заказ в Markdown;
 - `maxNotifyOrderStatus` — новый статус в Markdown;
 - `maxNotifyOrderCreatedHtml` — новый заказ в HTML;
-- `maxNotifyOrderStatusHtml` — новый статус в HTML.
+- `maxNotifyOrderStatusHtml` — новый статус в HTML;
+- `maxNotifyForm` — заявка с формы в Markdown;
+- `maxNotifyFormHtml` — заявка с формы в HTML.
 
 Доступные плейсхолдеры: `num`, `cost`, `receiver`, `phone`, `email`,
 `address`, `comment`, `order_comment`, `products`, `delivery_name`,
-`payment_name`, `status_name`, `manager_url` и другие поля заказа.
+`payment_name`, `status_name`, `manager_url`, `source`, `title`, `fields`,
+`resource_id`, `resource_pagetitle`, `ip` и другие поля заказа или формы.

@@ -5,6 +5,7 @@ class modX
     const LOG_LEVEL_ERROR = 1;
 
     public $logs = array();
+    public $chunks = array();
 
     public function getOption($key, $options = null, $default = null)
     {
@@ -14,6 +15,15 @@ class modX
     public function log($level, $message)
     {
         $this->logs[] = array($level, $message);
+    }
+
+    public function getChunk($name, array $properties = array())
+    {
+        $chunk = isset($this->chunks[$name]) ? $this->chunks[$name] : '';
+        foreach ($properties as $key => $value) {
+            $chunk = str_replace('[[+' . $key . ']]', $value, $chunk);
+        }
+        return $chunk;
     }
 }
 
@@ -89,5 +99,23 @@ assertTrue(
     $rumaxbot->requests[0]['authorization'] === 'Bearer rumax-key',
     'rumaxbot must keep the Bearer authorization scheme.'
 );
+
+$modx->chunks['maxNotifyForm'] = '[[+title]] [[+source]] [[+fields]]';
+$form = new TestMaxNotify($modx, array(
+    'provider' => 'rumaxbot',
+    'apiUrl' => 'https://rumaxbot.ru/api/v1/messages',
+    'apiKey' => 'rumax-key',
+    'format' => 'markdown',
+    'formExcludeFields' => 'token,nospam',
+));
+
+assertTrue(
+    $form->notifyForm('FormIt', array('Name' => 'Alex', 'token' => 'secret', 'nospam' => '1'), 'Lead'),
+    'Form notification should be sent.'
+);
+$formPayload = json_decode($form->requests[0]['payload'], true);
+assertTrue(strpos($formPayload['text'], 'FormIt') !== false, 'Form source should be rendered.');
+assertTrue(strpos($formPayload['text'], 'Alex') !== false, 'Form fields should be rendered.');
+assertTrue(strpos($formPayload['text'], 'secret') === false, 'Excluded form fields must not be sent.');
 
 echo "MaxNotify service tests passed.\n";

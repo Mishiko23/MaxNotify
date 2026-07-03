@@ -16,6 +16,9 @@
 <ul>
     <li>уведомление сразу после создания заказа miniShop2;</li>
     <li>уведомление при изменении статуса заказа;</li>
+    <li>уведомления о заявках FormIt;</li>
+    <li>уведомления о заявках SendIt;</li>
+    <li>отдельное отключение источников miniShop2, FormIt и SendIt;</li>
     <li>фильтрация уведомлений по ID статусов;</li>
     <li>номер, сумма и состав заказа;</li>
     <li>имя, телефон и email покупателя;</li>
@@ -56,13 +59,35 @@
 
 <ul>
     <li><code>maxnotify.enabled</code> — включает или отключает компонент;</li>
+    <li><code>maxnotify.enable_minishop2</code> — уведомления miniShop2;</li>
+    <li><code>maxnotify.enable_formit</code> — уведомления FormIt;</li>
+    <li><code>maxnotify.enable_sendit</code> — уведомления SendIt;</li>
     <li><code>maxnotify.provider</code> — провайдер <code>rumaxbot</code> или <code>maxbusiness</code>;</li>
     <li><code>maxnotify.format</code> — формат сообщений: <code>markdown</code> или <code>html</code>;</li>
     <li><code>maxnotify.timeout</code> — таймаут API-запроса в секундах;</li>
     <li><code>maxnotify.notify_new_order</code> — уведомления о новых заказах;</li>
     <li><code>maxnotify.notify_status_change</code> — уведомления о смене статуса;</li>
-    <li><code>maxnotify.statuses</code> — ID статусов через запятую, пустое поле разрешает все статусы.</li>
+    <li><code>maxnotify.statuses</code> — ID статусов через запятую, пустое поле разрешает все статусы;</li>
+    <li><code>maxnotify.form_exclude_fields</code> — технические поля форм, которые не нужно отправлять.</li>
 </ul>
+
+<h2>Подключение FormIt</h2>
+
+<p>Добавьте hook-сниппет <code>maxNotifyFormIt</code> в параметр <code>&amp;hooks</code> после успешных проверок формы.</p>
+
+<pre><code>[[!FormIt?
+    &amp;hooks=`spam,email,maxNotifyFormIt,redirect`
+    &amp;emailTpl=`tpl.Email`
+    &amp;redirectTo=`12`
+]]</code></pre>
+
+<p>Отключить отправку заявок FormIt можно настройкой <code>maxnotify.enable_formit</code>. Заголовок сообщения меняется настройкой <code>maxnotify.formit_title</code>.</p>
+
+<h2>Подключение SendIt</h2>
+
+<p>Добавьте hook-сниппет <code>maxNotifySendIt</code> в цепочку успешной обработки SendIt, если в вашей конфигурации SendIt используются hook-сниппеты. Сниппет также умеет брать данные из <code>$_POST</code>, поэтому его можно вызывать после успешной валидации формы.</p>
+
+<p>Отключить отправку заявок SendIt можно настройкой <code>maxnotify.enable_sendit</code>. Заголовок сообщения меняется настройкой <code>maxnotify.sendit_title</code>.</p>
 
 <h2>Подключение официального MAX Business API</h2>
 
@@ -117,7 +142,9 @@
     <li><code>maxNotifyOrderCreated</code> — новый заказ в формате Markdown;</li>
     <li><code>maxNotifyOrderStatus</code> — новый статус в формате Markdown;</li>
     <li><code>maxNotifyOrderCreatedHtml</code> — новый заказ в формате HTML;</li>
-    <li><code>maxNotifyOrderStatusHtml</code> — новый статус в формате HTML.</li>
+    <li><code>maxNotifyOrderStatusHtml</code> — новый статус в формате HTML;</li>
+    <li><code>maxNotifyForm</code> — заявка с формы в формате Markdown;</li>
+    <li><code>maxNotifyFormHtml</code> — заявка с формы в формате HTML.</li>
 </ul>
 
-<p>Доступные плейсхолдеры: <code>num</code>, <code>cost</code>, <code>receiver</code>, <code>phone</code>, <code>email</code>, <code>address</code>, <code>comment</code>, <code>order_comment</code>, <code>products</code>, <code>delivery_name</code>, <code>payment_name</code>, <code>status_name</code>, <code>manager_url</code> и другие поля заказа.</p>
+<p>Доступные плейсхолдеры: <code>num</code>, <code>cost</code>, <code>receiver</code>, <code>phone</code>, <code>email</code>, <code>address</code>, <code>comment</code>, <code>order_comment</code>, <code>products</code>, <code>delivery_name</code>, <code>payment_name</code>, <code>status_name</code>, <code>manager_url</code>, <code>source</code>, <code>title</code>, <code>fields</code>, <code>resource_id</code>, <code>resource_pagetitle</code>, <code>ip</code> и другие поля заказа или формы.</p>

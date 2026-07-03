@@ -19,13 +19,19 @@ if (!$maxNotify) {
 
 switch ($modx->event->name) {
     case 'msOnCreateOrder':
-        if ($modx->getOption('maxnotify.notify_new_order', null, true) && isset($msOrder)) {
+        if ($modx->getOption('maxnotify.enable_minishop2', null, true)
+            && $modx->getOption('maxnotify.notify_new_order', null, true)
+            && isset($msOrder)
+        ) {
             $maxNotify->notifyOrderCreated($msOrder);
         }
         break;
 
     case 'msOnChangeOrderStatus':
-        if ($modx->getOption('maxnotify.notify_status_change', null, false) && isset($order, $status)) {
+        if ($modx->getOption('maxnotify.enable_minishop2', null, true)
+            && $modx->getOption('maxnotify.notify_status_change', null, false)
+            && isset($order, $status)
+        ) {
             $maxNotify->notifyOrderStatus($order, $status);
         }
         break;

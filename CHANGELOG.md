@@ -1,5 +1,14 @@
 # История изменений MaxNotify
 
+## 1.2.0-pl
+
+- добавлены уведомления о заявках FormIt через hook-сниппет `maxNotifyFormIt`;
+- добавлены уведомления о заявках SendIt через hook-сниппет `maxNotifySendIt`;
+- добавлен общий шаблон заявки `maxNotifyForm` и HTML-версия `maxNotifyFormHtml`;
+- добавлены отдельные переключатели источников `maxnotify.enable_minishop2`, `maxnotify.enable_formit`, `maxnotify.enable_sendit`;
+- добавлен список исключаемых технических полей формы `maxnotify.form_exclude_fields`;
+- добавлены отдельные заголовки уведомлений FormIt и SendIt.
+
 ## 1.1.1-pl
 
 - обновлён официальный endpoint MAX Business API на `https://platform-api2.max.ru/messages`;

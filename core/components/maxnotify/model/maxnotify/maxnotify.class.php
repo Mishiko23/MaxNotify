@@ -2,7 +2,7 @@
 
 class MaxNotify
 {
-    const VERSION = '1.1.1';
+    const VERSION = '1.2.0';
 
     /** @var modX */
     public $modx;
@@ -62,6 +62,11 @@ class MaxNotify
             ),
             'format' => strtolower((string) $this->modx->getOption('maxnotify.format', null, 'markdown')),
             'timeout' => max(1, (int) $this->modx->getOption('maxnotify.timeout', null, 10)),
+            'formExcludeFields' => (string) $this->modx->getOption(
+                'maxnotify.form_exclude_fields',
+                null,
+                'nospam,blank,submit,action,form_key'
+            ),
         ), $config);
     }
 
@@ -110,8 +115,35 @@ class MaxNotify
         }
 
         $placeholders = $this->getOrderPlaceholders($order, $statusId);
-        $message = trim((string) $this->modx->getChunk($chunkName, $placeholders));
+        return $this->sendChunkMessage($chunkName, $placeholders);
+    }
 
+    /**
+     * Send a notification for a submitted form.
+     *
+     * @param string $source
+     * @param array $fields
+     * @param string $title
+     * @return bool
+     */
+    public function notifyForm($source, array $fields, $title = '')
+    {
+        $placeholders = $this->getFormPlaceholders($source, $fields, $title);
+        return $this->sendChunkMessage('maxNotifyForm', $placeholders);
+    }
+
+    /**
+     * @param string $chunkName
+     * @param array $placeholders
+     * @return bool
+     */
+    protected function sendChunkMessage($chunkName, array $placeholders)
+    {
+        if ($this->config['format'] === 'html') {
+            $chunkName .= 'Html';
+        }
+
+        $message = trim((string) $this->modx->getChunk($chunkName, $placeholders));
         if ($message === '') {
             $this->log(modX::LOG_LEVEL_ERROR, 'Message chunk is empty or missing: ' . $chunkName);
             return false;
@@ -168,6 +200,108 @@ class MaxNotify
         $values['products'] = $this->getProductsText($order);
 
         return $values;
+    }
+
+    /**
+     * @param string $source
+     * @param array $fields
+     * @param string $title
+     * @return array
+     */
+    protected function getFormPlaceholders($source, array $fields, $title)
+    {
+        $fields = $this->filterFormFields($fields);
+        $values = array(
+            'source' => $source,
+            'title' => $title !== '' ? $title : 'Новая заявка',
+            'resource_id' => $this->getCurrentResourceField('id'),
+            'resource_pagetitle' => $this->getCurrentResourceField('pagetitle'),
+            'site_url' => $this->modx->getOption('site_url'),
+            'ip' => isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '',
+            'user_agent' => isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : '',
+            'createdon' => date('Y-m-d H:i:s'),
+        );
+
+        foreach ($values as $key => $value) {
+            $values[$key] = $this->escape($value);
+        }
+
+        $values['fields'] = $this->getFieldsText($fields);
+
+        return $values;
+    }
+
+    /**
+     * @param string $field
+     * @return mixed|string
+     */
+    protected function getCurrentResourceField($field)
+    {
+        if (isset($this->modx->resource) && is_object($this->modx->resource) && method_exists($this->modx->resource, 'get')) {
+            return $this->modx->resource->get($field);
+        }
+
+        return '';
+    }
+
+    /**
+     * @param array $fields
+     * @return array
+     */
+    protected function filterFormFields(array $fields)
+    {
+        $exclude = array_filter(array_map('trim', explode(',', $this->config['formExcludeFields'])), 'strlen');
+        $exclude = array_map('strtolower', $exclude);
+
+        foreach ($fields as $key => $value) {
+            if (in_array(strtolower((string) $key), $exclude, true)) {
+                unset($fields[$key]);
+            }
+        }
+
+        return $fields;
+    }
+
+    /**
+     * @param array $fields
+     * @return string
+     */
+    protected function getFieldsText(array $fields)
+    {
+        $lines = array();
+        foreach ($fields as $key => $value) {
+            $line = $this->escape($key) . ': ' . $this->escape($this->normalizeFormValue($value));
+            $lines[] = $this->config['format'] === 'html'
+                ? '<li><b>' . $this->escape($key) . ':</b> ' . $this->escape($this->normalizeFormValue($value)) . '</li>'
+                : '- ' . $line;
+        }
+
+        if ($this->config['format'] === 'html') {
+            return $lines ? '<ul>' . implode('', $lines) . '</ul>' : '';
+        }
+
+        return implode("\n", $lines);
+    }
+
+    /**
+     * @param mixed $value
+     * @return string
+     */
+    protected function normalizeFormValue($value)
+    {
+        if (is_array($value)) {
+            $items = array();
+            foreach ($value as $item) {
+                $items[] = $this->normalizeFormValue($item);
+            }
+            return implode(', ', array_filter($items, 'strlen'));
+        }
+
+        if (is_object($value)) {
+            return method_exists($value, '__toString') ? (string) $value : '[object]';
+        }
+
+        return trim((string) $value);
     }
 
     /**
