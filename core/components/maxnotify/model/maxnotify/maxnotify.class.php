@@ -2,7 +2,7 @@
 
 class MaxNotify
 {
-    const VERSION = '1.2.1';
+    const VERSION = '1.2.2';
 
     /** @var modX */
     public $modx;

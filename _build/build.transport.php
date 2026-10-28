@@ -1,6 +1,14 @@
 <?php
 
 require_once __DIR__ . '/build.config.php';
+$offline = in_array('--offline', isset($argv) ? $argv : array(), true);
+if ($offline) {
+    defined('MODX_BASE_PATH') || define('MODX_BASE_PATH', dirname(MODX_CORE_PATH) . '/');
+    defined('MODX_ASSETS_PATH') || define('MODX_ASSETS_PATH', MODX_BASE_PATH . 'assets/');
+    defined('MODX_ASSETS_URL') || define('MODX_ASSETS_URL', '/assets/');
+    defined('MODX_BASE_URL') || define('MODX_BASE_URL', '/');
+    defined('MODX_CONFIG_KEY') || define('MODX_CONFIG_KEY', 'offline');
+}
 require_once MODX_CORE_PATH . 'model/modx/modx.class.php';
 
 class MaxNotifyBuildModX extends modX
@@ -18,8 +26,12 @@ class MaxNotifyBuildModX extends modX
     }
 }
 
-$modx = new MaxNotifyBuildModX();
-$modx->initialize('mgr');
+$modx = $offline
+    ? new MaxNotifyBuildModX(__DIR__ . '/config/')
+    : new MaxNotifyBuildModX();
+if (!$offline) {
+    $modx->initialize('mgr');
+}
 $modx->suppressEvents = false;
 $modx->setLogLevel(modX::LOG_LEVEL_INFO);
 $modx->setLogTarget('ECHO');
@@ -46,7 +58,17 @@ $namespace->fromArray(array(
     'name' => PKG_NAME_LOWER,
     'path' => '{core_path}components/' . PKG_NAME_LOWER . '/',
 ), '', true, true);
-$builder->registerNamespace($namespace, false, true);
+if ($offline) {
+    $builder->{'namespace'} = $namespace;
+    $namespaceVehicle = $builder->createVehicle($namespace, array(
+        xPDOTransport::UNIQUE_KEY => 'name',
+        xPDOTransport::PRESERVE_KEYS => true,
+        xPDOTransport::UPDATE_OBJECT => true,
+    ));
+    $builder->putVehicle($namespaceVehicle);
+} else {
+    $builder->registerNamespace($namespace, false, true);
+}
 
 $category = $modx->newObject('modCategory');
 $category->set('category', PKG_NAME);
